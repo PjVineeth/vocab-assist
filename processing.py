@@ -26,6 +26,12 @@ from io import BytesIO
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 
+if not api_key:
+    print("ERROR: GEMINI_API_KEY environment variable not found!")
+    print("Please set GEMINI_API_KEY in your environment variables.")
+    # You can uncomment the line below to see what env vars are available
+    # print("Available env vars:", list(os.environ.keys()))
+
 # Configure Gemini
 genai.configure(api_key=api_key)
 

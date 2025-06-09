@@ -9,3 +9,5 @@ services:
         value: production
       - key: PORT
         value: 5001
+      - key: GEMINI_API_KEY
+        value: AIzaSyDdlpRoOhsmj8KPWiX5krNFOfTCwSMj8LY

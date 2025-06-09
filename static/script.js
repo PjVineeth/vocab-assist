@@ -6,9 +6,14 @@ let animation; // Avatar animation
 // Dynamic API base URL based on environment
 const getApiBaseUrl = () => {
   const hostname = window.location.hostname;
-  const port = window.location.port;
+  const protocol = window.location.protocol;
   
-  // If running on production server
+  // If running on Render (production)
+  if (hostname.includes('onrender.com')) {
+    return `${protocol}//${hostname}`;
+  }
+  
+  // If running on specific production server
   if (hostname === '27.111.72.61') {
     return `http://27.111.72.61:5001`;
   }

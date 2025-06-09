@@ -7,6 +7,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from flask_cors import CORS
 import traceback
 import time
+import base64
 
 
 app = Flask(__name__)
@@ -133,10 +134,11 @@ def conversation_loop_new(file_path):
     conversation_history.append({"user": text, "agent": response})
     latencies['update_history_for_conversation'] = time.time() - start
 
-    # 6. Synthesize and play audio
+    # 6. Generate audio for frontend (don't play on server)
     start = time.time()
-    synthesize_and_play_audio(response)
-    latencies['synthesize_and_play_audio_TTS'] = time.time() - start
+    # Don't play audio on server - let frontend handle it
+    # synthesize_and_play_audio(response)
+    latencies['audio_generation_skipped'] = time.time() - start
 
     # Print latencies
     print("\n--- Latency Report ---")
@@ -189,12 +191,45 @@ def greet_user():
     global greeting_played
     if not greeting_played:
         greeting = "Customer Care Agent is ready to assist you. Speak now. Say 'exit' to end the conversation."
-        synthesize_and_play_audio(greeting)
+        # Don't play on server - just return text
         print(greeting)
         # greeting_played = True
         return jsonify({"greeting": greeting})
     else:
         return jsonify({"greeting": None})
+
+@app.route("/tts", methods=["POST"])
+def text_to_speech_endpoint():
+    """Convert text to speech and return audio data for frontend playback."""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        
+        if not text:
+            return jsonify({"error": "No text provided"}), 400
+        
+        # Create TTS audio
+        temp_file = "temp_response.mp3"
+        tts = gTTS(text=text, lang='en', slow=False)
+        tts.save(temp_file)
+        
+        # Read the audio file and convert to base64
+        with open(temp_file, 'rb') as audio_file:
+            audio_data = audio_file.read()
+            audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+        
+        # Clean up temp file
+        os.remove(temp_file)
+        
+        return jsonify({
+            "success": True,
+            "audio": audio_base64,
+            "format": "mp3"
+        })
+        
+    except Exception as e:
+        print(f"TTS Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":

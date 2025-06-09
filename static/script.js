@@ -97,6 +97,9 @@ startBtn.addEventListener('click', async () => {
       asrText.appendChild(botMsg);
 
       botMsg.scrollIntoView({ behavior: 'smooth' });
+
+      // Play TTS audio
+      playTTSAudio(result.ai_response);
     } catch (err) {
       micAnimation.style.display = 'none';
       typingIndicator.remove();
@@ -194,4 +197,44 @@ function loadRandomGesture() {
   const gestures = ['gesture1.json', 'gesture2.json', 'gesture3.json'];
   const randomGesture = gestures[Math.floor(Math.random() * gestures.length)];
   loadAvatarAnimation(`../static/${randomGesture}`, false);
+}
+
+// --- Text-to-Speech function ---
+async function playTTSAudio(text) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/tts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: text })
+    });
+
+    if (!response.ok) {
+      console.error('TTS request failed:', response.status);
+      return;
+    }
+
+    const result = await response.json();
+    if (result.success && result.audio) {
+      // Convert base64 to audio blob
+      const audioData = atob(result.audio);
+      const audioArray = new Uint8Array(audioData.length);
+      for (let i = 0; i < audioData.length; i++) {
+        audioArray[i] = audioData.charCodeAt(i);
+      }
+      
+      const audioBlob = new Blob([audioArray], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      // Play the audio
+      const audio = new Audio(audioUrl);
+      audio.play().catch(err => console.error('Audio play failed:', err));
+      
+      // Clean up URL after playing
+      audio.onended = () => URL.revokeObjectURL(audioUrl);
+    }
+  } catch (error) {
+    console.error('TTS Error:', error);
+  }
 }

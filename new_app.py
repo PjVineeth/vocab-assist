@@ -6,9 +6,6 @@ from updated_processing import *
 import traceback
 import time
 import logging
-import base64
-import uuid
-from gtts import gTTS
 
 app = Flask(__name__)
 
@@ -25,9 +22,7 @@ CORS(app, resources={
             "http://127.0.0.1:5001", 
             "http://27.111.72.61:4003",           # Your actual production URL
             "http://27.111.72.61.nip.io:4003",    # Alternative domain
-            "https://27.111.72.61:4003",          # HTTPS version
-            "https://vocab-assist.onrender.com",  # Render deployment
-            "http://vocab-assist.onrender.com"    # Render deployment HTTP
+            "https://27.111.72.61:4003"           # HTTPS version
         ],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
@@ -91,11 +86,10 @@ def conversation_loop_new(file_path):
     start = time.time()
     conversation_history.append({"user": text, "agent": response})
 
-    # 6. Generate audio for frontend (don't play on server)
+    # 6. Synthesize and play audio
     start = time.time()
-    # Don't play audio on server - let frontend handle it
-    # synthesize_and_play_audio(response)
-    latencies['audio_generation_skipped'] = time.time() - start
+    synthesize_and_play_audio(response)
+    latencies['synthesize_and_play_audio_TTS'] = time.time() - start
 
     # Print latencies
     print("\n--- Latency Report ---")
@@ -144,56 +138,13 @@ def greet_user():
         # greeting = "Customer Care Agent is ready to assist you. Speak now. Say 'exit' to end the conversation."
         greeting = "Cred Agent is happy to help you , please let me know your query ."
         logger.info("👋 Sending greeting to user")
-        # Don't play on server - just return text
+        synthesize_and_play_audio(greeting)
         logger.info(f"🤖 Greeting: {greeting}")
-        # greeting_played = True
+        greeting_played = True
         return jsonify({"greeting": greeting})
     else:
         logger.info("👋 Greeting already sent, skipping")
         return jsonify({"greeting": None})
-
-
-@app.route("/tts", methods=["POST"])
-def text_to_speech_endpoint():
-    """Convert text to speech and return audio data for frontend playback."""
-    try:
-        data = request.get_json()
-        text = data.get('text', '')
-        
-        if not text:
-            logger.error("❌ No text provided for TTS")
-            return jsonify({"error": "No text provided"}), 400
-        
-        logger.info(f"🔊 Converting text to speech: {text[:50]}...")
-        
-        # Create TTS audio with unique filename
-        import tempfile
-        import uuid
-        temp_file = f"temp_response_{uuid.uuid4().hex[:8]}.mp3"
-        
-        tts = gTTS(text=text, lang='en', slow=False)
-        tts.save(temp_file)
-        
-        # Read the audio file and convert to base64
-        with open(temp_file, 'rb') as audio_file:
-            audio_data = audio_file.read()
-            audio_base64 = base64.b64encode(audio_data).decode('utf-8')
-        
-        # Clean up temp file
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
-        
-        logger.info("✅ TTS audio generated successfully")
-        
-        return jsonify({
-            "success": True,
-            "audio": audio_base64,
-            "format": "mp3"
-        })
-        
-    except Exception as e:
-        logger.error(f"❌ TTS Error: {e}")
-        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":

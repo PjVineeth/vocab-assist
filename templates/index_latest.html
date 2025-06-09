@@ -23,9 +23,33 @@
 
     <div id="recordingStatus" class="recording-indicator" style="display: none;">🔴 Recording...</div>
     <div id="micAnimation" class="mic-animation"></div>
-    <div class="chat-box" id="asrText"></div>
+    <div class="chat-box" id="asrText">
+      <!-- Static test greeting -->
+      <div class="message bot">🤖 Welcome! Cred Agent is happy to help you, please let me know your query.</div>
+    </div>
   </div>
 
+  <script>
+    // Simple test to verify JavaScript is working
+    console.log('JavaScript is loading...');
+    alert('JavaScript test: Page loaded successfully!');
+    
+    // Test if asrText element exists
+    window.addEventListener('DOMContentLoaded', () => {
+      const asrText = document.getElementById('asrText');
+      console.log('asrText element:', asrText);
+      if (asrText) {
+        console.log('asrText found! Adding dynamic greeting...');
+        const dynamicGreeting = document.createElement('div');
+        dynamicGreeting.className = 'message bot';
+        // dynamicGreeting.innerText = '...';
+        // asrText.appendChild(dynamicGreeting);
+      } else {
+        console.error('asrText element not found!');
+      }
+    });
+  </script>
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.4/lottie.min.js"></script>
   <script src="../static/script.js"></script>
 </body>

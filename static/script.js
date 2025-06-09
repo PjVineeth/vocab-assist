@@ -6,14 +6,9 @@ let animation; // Avatar animation
 // Dynamic API base URL based on environment
 const getApiBaseUrl = () => {
   const hostname = window.location.hostname;
-  const protocol = window.location.protocol;
+  const port = window.location.port;
   
-  // If running on Render (production)
-  if (hostname.includes('onrender.com')) {
-    return `${protocol}//${hostname}`;
-  }
-  
-  // If running on specific production server
+  // If running on production server
   if (hostname === '27.111.72.61') {
     return `http://27.111.72.61:5001`;
   }
@@ -97,9 +92,6 @@ startBtn.addEventListener('click', async () => {
       asrText.appendChild(botMsg);
 
       botMsg.scrollIntoView({ behavior: 'smooth' });
-
-      // Play TTS audio
-      playTTSAudio(result.ai_response);
     } catch (err) {
       micAnimation.style.display = 'none';
       typingIndicator.remove();
@@ -175,20 +167,44 @@ function encodeWAV(audioBuffer) {
 
 // --- On page load: show avatar's first frame ---
 window.addEventListener('DOMContentLoaded', async () => {
+  console.log('Page loaded, starting greeting process...');
   loadAvatarAnimation('https://lottie.host/61afd9a0-e462-4c31-b8b3-d12f41a63fc0/P9a5StytCO.json', false);
+
+  // Add a test message first to ensure the display mechanism works
+  console.log('Adding test message...');
+  const testMessage = document.createElement('div');
+  testMessage.className = 'message bot';
+  testMessage.innerText = '🧪 Test: Message display is working!';
+  asrText.appendChild(testMessage);
 
   // Optionally: greet the user
   try {
+    console.log('Fetching greeting from:', `${API_BASE_URL}/greet`);
     const response = await fetch(`${API_BASE_URL}/greet`);
+    console.log('Greeting response status:', response.status);
+    
     const data = await response.json();
+    console.log('Greeting data received:', data);
+    
     if (data.greeting) {
+      console.log('Creating greeting message element...');
       const botGreeting = document.createElement('div');
       botGreeting.className = 'message bot';
       botGreeting.innerText = `🤖 ${data.greeting}`;
+      
+      console.log('Appending greeting to asrText element...');
       asrText.appendChild(botGreeting);
+      
+      console.log('Greeting should now be visible!');
+      
+      // Also show an alert as backup to confirm the greeting is working
+      alert(`Greeting received: ${data.greeting}`);
+    } else {
+      console.log('No greeting in response');
     }
   } catch (err) {
     console.error("Failed to fetch greeting:", err);
+    alert(`Greeting failed: ${err.message}`);
   }
 });
 
@@ -197,44 +213,4 @@ function loadRandomGesture() {
   const gestures = ['gesture1.json', 'gesture2.json', 'gesture3.json'];
   const randomGesture = gestures[Math.floor(Math.random() * gestures.length)];
   loadAvatarAnimation(`../static/${randomGesture}`, false);
-}
-
-// --- Text-to-Speech function ---
-async function playTTSAudio(text) {
-  try {
-    const response = await fetch(`${API_BASE_URL}/tts`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text: text })
-    });
-
-    if (!response.ok) {
-      console.error('TTS request failed:', response.status);
-      return;
-    }
-
-    const result = await response.json();
-    if (result.success && result.audio) {
-      // Convert base64 to audio blob
-      const audioData = atob(result.audio);
-      const audioArray = new Uint8Array(audioData.length);
-      for (let i = 0; i < audioData.length; i++) {
-        audioArray[i] = audioData.charCodeAt(i);
-      }
-      
-      const audioBlob = new Blob([audioArray], { type: 'audio/mpeg' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
-      // Play the audio
-      const audio = new Audio(audioUrl);
-      audio.play().catch(err => console.error('Audio play failed:', err));
-      
-      // Clean up URL after playing
-      audio.onended = () => URL.revokeObjectURL(audioUrl);
-    }
-  } catch (error) {
-    console.error('TTS Error:', error);
-  }
 }

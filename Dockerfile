@@ -35,4 +35,4 @@ COPY . .
 EXPOSE 5001
 
 # Run the application with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5001", "app:app"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:$PORT app:app"]

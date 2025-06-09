@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manual Audio Recorder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #recordButton {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        #recordButton.recording {
+            background-color: red;
+        }
+        #statusText {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+
+    <!-- Font Awesome for icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+    <h1>Manual Audio Recorder</h1>
+
+    <button id="recordButton">
+        <i class="fas fa-microphone"></i>
+    </button>
+
+    <p id="statusText">Click microphone to start recording</p>
+
+    <script>
+        let isRecording = false;
+        let mediaRecorder;
+        let audioChunks = [];
+
+        const recordButton = document.getElementById('recordButton');
+        const statusText = document.getElementById('statusText');
+
+        recordButton.addEventListener('click', () => {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        });
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                recordButton.classList.add('recording');
+                recordButton.innerHTML = '<i class="fas fa-stop"></i>';
+                statusText.textContent = "Recording... Click to stop.";
+
+            } catch (error) {
+                console.error('Microphone access error:', error);
+                statusText.textContent = "Microphone access denied.";
+            }
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            isRecording = false;
+            recordButton.classList.remove('recording');
+            recordButton.innerHTML = '<i class="fas fa-microphone"></i>';
+            statusText.textContent = "Recording stopped. Sending audio...";
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                sendAudioToServer(audioBlob);
+
+                audioChunks = []; // Reset for next recording
+            };
+        }
+
+        function sendAudioToServer(audioBlob) {
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'recorded_audio.wav');
+
+            fetch('http://127.0.0.1:5001/upload-audio', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Server response:', data);
+                statusText.textContent = "Audio sent! Server says: " + (data.message || "Success");
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                statusText.textContent = "Failed to send audio.";
+            });
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Companion</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #f1f5f9;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .title {
+            margin-bottom: 2rem;
+            color: var(--dark);
+        }
+        
+        .title h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .title p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .mic-container {
+            position: relative;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .mic-button {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+            z-index: 1;
+        }
+        
+        .mic-button:hover {
+            background-color: var(--primary-dark);
+            transform: scale(1.05);
+        }
+        
+        .mic-button i {
+            font-size: 2.5rem;
+        }
+        
+        .mic-button.listening {
+            animation: pulse 1.5s infinite;
+            background-color: var(--danger);
+        }
+        
+        .stop-button {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .stop-button.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .stop-button:hover {
+            transform: translateX(-50%) scale(1.05);
+        }
+        
+        .wave-container {
+            position: absolute;
+            width: 100%;
+            height: 50px;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .wave-container.visible {
+            opacity: 1;
+        }
+        
+        .wave {
+            width: 4px;
+            height: 20px;
+            background-color: var(--primary);
+            margin: 0 2px;
+            border-radius: 2px;
+            animation: wave 1s infinite ease-in-out;
+        }
+        
+        .wave:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        
+        .wave:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+        
+        .wave:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+        
+        .wave:nth-child(5) {
+            animation-delay: 0.4s;
+        }
+        
+        .wave:nth-child(6) {
+            animation-delay: 0.5s;
+        }
+        
+        .wave:nth-child(7) {
+            animation-delay: 0.6s;
+        }
+        
+        .status-text {
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            color: #64748b;
+            font-weight: 500;
+            min-height: 1.5rem;
+        }
+        
+        .footer {
+            margin-top: 2rem;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+        
+        @keyframes wave {
+            0%, 100% {
+                height: 10px;
+            }
+            50% {
+                height: 40px;
+            }
+        }
+        
+        .response-bubble {
+            background-color: var(--secondary);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: left;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease, padding 0.5s ease, margin 0.5s ease;
+        }
+        
+        .response-bubble.visible {
+            max-height: 200px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        #pdfForm {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background-color: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 400px;
+    margin: auto;
+  }
+
+  #pdfForm input[type="file"] {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    cursor: pointer;
+  }
+
+  #uploadStatus {
+    font-size: 0.9rem;
+    color: #64748b;
+  }
+
+  #pdfForm button {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+  }
+
+  #pdfForm button:hover {
+    background-color: #1e40af;
+  }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">
+            <h1>Voice Companion</h1>
+            <p>Speak naturally and get AI-powered responses</p>
+        </div>
+        
+        <div class="card">
+            <div class="mic-container">
+                <button class="mic-button" id="micButton">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                
+                <button class="stop-button" id="stopButton">
+                    Stop Listening
+                </button>
+                
+                <div class="wave-container" id="waveContainer">
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                </div>
+            </div>
+            
+            <div class="status-text" id="statusText">Click the microphone to start</div>
+            
+            <div class="response-bubble" id="responseBubble">
+                <p id="responseText"></p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            © 2025 Voice Companion | Powered by AI
+        </div>
+    </div>
+    
+    <script>
+        const micButton = document.getElementById('micButton');
+        const stopButton = document.getElementById('stopButton');
+        const waveContainer = document.getElementById('waveContainer');
+        const statusText = document.getElementById('statusText');
+        const responseBubble = document.getElementById('responseBubble');
+        const responseText = document.getElementById('responseText');
+        
+        let isListening = false;
+        
+        micButton.addEventListener('click', () => {
+            if (!isListening) {
+                startListening();
+            } else {
+                stopListening();
+            }
+        });
+        
+        stopButton.addEventListener('click', () => {
+            stopListening();
+        });
+        
+        function startListening() {
+            isListening = true;
+            
+            // Make API call to start conversation
+            fetch('http://127.0.0.1:5001/start')
+                .then(response => {
+                    if (response.ok) {
+                        // Update UI to show listening state
+                        micButton.classList.add('listening');
+                        stopButton.classList.add('visible');
+                        waveContainer.classList.add('visible');
+                        statusText.textContent = "Listening...";
+                        
+                        // For demo purposes - simulate response after 3 seconds
+                        setTimeout(() => {
+                            simulateResponse();
+                        }, 3000);
+                    } else {
+                        statusText.textContent = "Error starting conversation";
+                    }
+                })
+                .catch(error => {
+                    statusText.textContent = "Connection error. Is the server running?";
+                    stopListening();
+                });
+        }
+        
+        function stopListening() {
+            isListening = false;
+            
+            // Update UI to show not listening state
+            micButton.classList.remove('listening');
+            stopButton.classList.remove('visible');
+            waveContainer.classList.remove('visible');
+            statusText.textContent = "Click the microphone to start";
+            
+            // In a real implementation, you would make an API call to stop listening
+        }
+        
+        function simulateResponse() {
+            // This is for demonstration - in real implementation, 
+            // you would get responses from your backend
+            statusText.textContent = "AI is responding...";
+            
+            setTimeout(() => {
+    // Disable the mic button during AI response
+            micButton.disabled = true;
+
+            responseBubble.classList.add('visible');
+            responseText.textContent = "This is a simulated response from the AI. In a real implementation, this would be the response from your backend.";
+            statusText.textContent = "Response complete";
+            stopListening();
+
+            // Auto-reset after 5 seconds
+            setTimeout(() => {
+                responseBubble.classList.remove('visible');
+                statusText.textContent = "Click the microphone to start";
+                micButton.disabled = false; // Re-enable the mic button
+            }, 5000);
+        }, 2000);
+
+                }
+
+    </script>
+</body>
+</html>

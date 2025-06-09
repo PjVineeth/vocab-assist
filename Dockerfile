@@ -1,0 +1,33 @@
+FROM python:3.10-slim
+
+# Install system dependencies for pygame mixer
+RUN apt-get update && apt-get install -y \
+    libglib2.0-0 \
+    libgl1 \
+    libasound2 \
+    libx11-6 \
+    libxcursor1 \
+    libxrandr2 \
+    libxinerama1 \
+    libxi6 \
+    libsm6 \
+    libxext6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the requirements file into the container
+COPY requirements.txt .
+
+# Install the required packages
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code into the container
+COPY . .
+
+# Expose the port the app runs on
+EXPOSE 5001
+
+# Run the application
+CMD ["python", "app.py"]

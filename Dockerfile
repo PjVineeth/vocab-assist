@@ -1,6 +1,6 @@
 FROM python:3.10-slim
 
-# Install system dependencies for pygame mixer
+# Install system dependencies for pygame mixer and pyaudio
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libgl1 \
@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y \
     libxi6 \
     libsm6 \
     libxext6 \
+    portaudio19-dev \
+    python3-dev \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory

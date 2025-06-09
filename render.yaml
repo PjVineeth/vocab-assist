@@ -3,7 +3,7 @@ services:
     name: vocab-assist
     runtime: docker
     dockerfilePath: ./Dockerfile
-    dockerCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    dockerCommand: gunicorn --bind 0.0.0.0:$PORT new_app:app
     envVars:
       - key: FLASK_ENV
         value: production

@@ -52,4 +52,4 @@ langchain-google-genai
 langchain-community
 google-generativeai
 pypdf
-pyaudio
+pyaudio==0.2.11

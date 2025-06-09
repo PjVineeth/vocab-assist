@@ -2,6 +2,7 @@ FROM python:3.10-slim
 
 # Install system dependencies for pygame mixer and pyaudio
 RUN apt-get update && apt-get install -y \
+    build-essential \
     libglib2.0-0 \
     libgl1 \
     libasound2 \
@@ -13,8 +14,9 @@ RUN apt-get update && apt-get install -y \
     libsm6 \
     libxext6 \
     portaudio19-dev \
+    libasound2-dev \
     python3-dev \
-    gcc \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory

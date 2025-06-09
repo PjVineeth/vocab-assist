@@ -1,4 +1,10 @@
-import speech_recognition as sr
+try:
+    import speech_recognition as sr
+    SPEECH_RECOGNITION_AVAILABLE = True
+except ImportError:
+    SPEECH_RECOGNITION_AVAILABLE = False
+    print("Warning: speech_recognition not available - microphone features disabled")
+
 import time
 import os
 from gtts import gTTS
@@ -28,6 +34,10 @@ pygame.mixer.init()
 
 def listen_for_speech(timeout=3):
     """Continuously listens for speech and returns transcription when silence is detected."""
+    if not SPEECH_RECOGNITION_AVAILABLE:
+        print("Speech recognition not available - microphone disabled in deployment")
+        return None, None
+    
     recognizer = sr.Recognizer()
     microphone = sr.Microphone()
 
@@ -112,6 +122,9 @@ def send_audio_to_server_new(file_path, api_url="http://27.111.72.61:10003/uploa
 
 def send_audio_to_server(api_url="http://27.111.72.61:10003/upload"):
     """Records audio and sends it to server for processing."""
+    if not SPEECH_RECOGNITION_AVAILABLE:
+        print("Speech recognition not available - microphone disabled in deployment")
+        return None
 
     recognizer = sr.Recognizer()
     microphone = sr.Microphone()

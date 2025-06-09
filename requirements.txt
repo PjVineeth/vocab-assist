@@ -52,4 +52,4 @@ langchain-google-genai
 langchain-community
 google-generativeai
 pypdf
-pyaudio==0.2.11
+# pyaudio==0.2.11  # Commented out for deployment - causes build issues

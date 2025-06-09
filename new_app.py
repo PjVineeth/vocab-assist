@@ -7,6 +7,8 @@ import traceback
 import time
 import logging
 import base64
+import uuid
+from gtts import gTTS
 
 app = Flask(__name__)
 
@@ -23,7 +25,9 @@ CORS(app, resources={
             "http://127.0.0.1:5001", 
             "http://27.111.72.61:4003",           # Your actual production URL
             "http://27.111.72.61.nip.io:4003",    # Alternative domain
-            "https://27.111.72.61:4003"           # HTTPS version
+            "https://27.111.72.61:4003",          # HTTPS version
+            "https://vocab-assist.onrender.com",  # Render deployment
+            "http://vocab-assist.onrender.com"    # Render deployment HTTP
         ],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
@@ -162,8 +166,11 @@ def text_to_speech_endpoint():
         
         logger.info(f"🔊 Converting text to speech: {text[:50]}...")
         
-        # Create TTS audio
-        temp_file = "temp_response.mp3"
+        # Create TTS audio with unique filename
+        import tempfile
+        import uuid
+        temp_file = f"temp_response_{uuid.uuid4().hex[:8]}.mp3"
+        
         tts = gTTS(text=text, lang='en', slow=False)
         tts.save(temp_file)
         
@@ -173,7 +180,8 @@ def text_to_speech_endpoint():
             audio_base64 = base64.b64encode(audio_data).decode('utf-8')
         
         # Clean up temp file
-        os.remove(temp_file)
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
         
         logger.info("✅ TTS audio generated successfully")
         
